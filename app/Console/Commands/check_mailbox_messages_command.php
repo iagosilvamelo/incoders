@@ -34,7 +34,7 @@ class check_mailbox_messages_command extends Command
      */
     public function handle()
     {
-        $mails = MailboxController::get_messages();
+        $mails = MailboxController::index();
 
         if ( $mails[0] === "empty" )
             $this->line( "Mailbox is empty." );

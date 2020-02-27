@@ -26,7 +26,7 @@ class MailboxController extends Controller
      *
      * @return Array $mails
      */
-    public static function get_messages()
+    public static function index()
     {
         $mails = [];
 
