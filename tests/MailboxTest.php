@@ -14,4 +14,15 @@ class MailboxTest extends TestCase
         $command = $this->artisan("mailbox:check-messages");
         assert($command != 0, 'The command is ok.');
     }
+
+    /**
+     * Test route: api/mailbox
+     *
+     * @return void
+     */
+    public function test_route_mailbox_index()
+    {
+        $response = $this->call('GET', 'api/mailbox');
+        $this->assertEquals(200, $response->status());
+    }
 }
