@@ -59,24 +59,17 @@ class MailboxController extends Controller
      */
     public static function find( $id )
     {
-        $mails = [];
+        $email = self::mail()->getMail($id);
 
-        try {
-            $mailsIds = self::mail()->searchMailbox('ALL');
+        $response = [
+            'from-name'   => (isset($email->fromName)) ? $email->fromName : $email->fromAddress,
+            'from-email'  => $email->fromAddress,
+            'to'          => $email->to,
+            'subject'     => $email->subject,
+            'attachments' => ($email->hasAttachments()) ? true : false,
+            'message'     => $email->textPlain
+        ];
 
-        } catch( \PhpImap\Exceptions\ConnectionException $ex ) {
-            $mails[0] = "error";
-            $mails[1] = "IMAP connection failed: " . $ex;
-        }
-
-        if( !$mailsIds ) {
-            $mails[0] = "empty";
-        }
-
-        else {
-            array_push( $mails, self::mail()->getMail($id) );
-        }
-
-        return $mails;
+        return response()->json( $response );
     }
 }
