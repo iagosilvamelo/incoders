@@ -17,12 +17,12 @@ class MailboxController extends Controller
             env('MAIL_SERVER'),
             env('MAIL_USERNAME'),
             env('MAIL_PASSWORD'),
-            env('MAIL_ATCDIR'),
+            env('MAIL_ATTACHMENTS'),
         );
     }
 
     /**
-     * Get all messages
+     * Get all unseen messages
      *
      * @return Array $mails
      */
@@ -31,7 +31,7 @@ class MailboxController extends Controller
         $mails = [];
 
         try {
-            $mailsIds = self::mail()->searchMailbox('ALL');
+            $mailsIds = self::mail()->searchMailbox('UNSEEN');
 
         } catch( \PhpImap\Exceptions\ConnectionException $ex ) {
             $mails[0] = "error";
@@ -44,7 +44,7 @@ class MailboxController extends Controller
 
         else {
             foreach( $mailsIds as $id ) {
-                array_push( $mails, self::mail()->getMail($id) );
+                array_push( $mails, self::prepare_structure( self::mail()->getMail($id) ) );
             }
         }
 
@@ -59,9 +59,18 @@ class MailboxController extends Controller
      */
     public static function find( $id )
     {
-        $email = self::mail()->getMail($id);
+        return response()->json( self::prepare_structure( self::mail()->getMail($id) ) );
+    }
 
-        $response = [
+    /**
+     * Prepare response with userful data
+     *
+     * @param PhpImap\Mailbox $email
+     * @return Array
+     */
+    public static function prepare_structure( $email )
+    {
+        return [
             'from-name'   => (isset($email->fromName)) ? $email->fromName : $email->fromAddress,
             'from-email'  => $email->fromAddress,
             'to'          => $email->to,
@@ -69,7 +78,5 @@ class MailboxController extends Controller
             'attachments' => ($email->hasAttachments()) ? true : false,
             'message'     => $email->textPlain
         ];
-
-        return response()->json( $response );
     }
 }
