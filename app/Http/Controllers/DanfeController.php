@@ -73,7 +73,10 @@ class DanfeController extends Controller
     public static function extract_data( $message )
     {
         $danfe = [
-            "nome" => self::get_danfe_name($message)
+            "nome"       => self::get_danfe_name($message),
+            "endereco"   => self::get_danfe_endereco($message),
+            "valor"      => self::get_danfe_valor($message),
+            "vencimento" => self::get_danfe_vencimento($message),
         ];
 
         return $danfe;
@@ -87,8 +90,50 @@ class DanfeController extends Controller
      */
     public static function get_danfe_name( $message )
     {
-        $str = substr( $message, stripos($message, 'nome:') + 6 );
+        $str = substr( $message, stripos($message, 'nome:') + 5 );
         $str_end = self::multineedle_stripos($str, ['endereço', 'endereco']);
+
+        return substr($str, 0, $str_end);
+    }
+
+    /**
+     * Extracts 'endereco' from message
+     *
+     * @param String $message
+     * @return String
+     */
+    public static function get_danfe_endereco( $message )
+    {
+        $str = substr( $message, self::multineedle_stripos($message, ['endereço', 'endereco']) + 10 );
+        $str_end = stripos($str, 'valor:');
+
+        return substr($str, 0, $str_end);
+    }
+
+    /**
+     * Extracts 'valor' from message
+     *
+     * @param String $message
+     * @return String
+     */
+    public static function get_danfe_valor( $message )
+    {
+        $str = substr( $message, stripos($message, 'valor:') + 6 );
+        $str_end = stripos($str, 'vencimento:');
+
+        return substr($str, 0, $str_end);
+    }
+
+    /**
+     * Extracts 'vencimento' from message
+     *
+     * @param String $message
+     * @return String
+     */
+    public static function get_danfe_vencimento( $message )
+    {
+        $str = substr( $message, stripos($message, 'vencimento:') + 11 );
+        $str_end = -1; //stripos($str, 'vencimento:');
 
         return substr($str, 0, $str_end);
     }
