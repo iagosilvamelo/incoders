@@ -52,7 +52,7 @@ class DanfeController extends Controller
         if ( !stripos($message, 'nome:') )
             $check = false;
 
-        if ( !self::multineedle_stripos($message, ['endereço:', 'endereco']) )
+        if ( !stripos($message, 'endereço:') )
             $check = false;
 
         if ( !stripos($message, 'valor:') )
@@ -73,89 +73,28 @@ class DanfeController extends Controller
     public static function extract_data( $message )
     {
         $danfe = [
-            "nome"       => self::get_danfe_name($message),
-            "endereco"   => self::get_danfe_endereco($message),
-            "valor"      => self::get_danfe_valor($message),
-            "vencimento" => self::get_danfe_vencimento($message),
+            "nome"       => self::get_danfe_information($message, 'nome:'),
+            "endereco"   => self::get_danfe_information($message, 'endereço:'),
+            "valor"      => self::get_danfe_information($message, 'valor:'),
+            "vencimento" => self::get_danfe_information($message, 'vencimento:'),
         ];
 
         return $danfe;
     }
 
     /**
-     * Extracts 'nome' from message
+     * Extracts information from message
      *
      * @param String $message
+     * @param String $keyword
      * @return String
      */
-    public static function get_danfe_name( $message )
+    public static function get_danfe_information( $message, $keyword )
     {
-        $str = substr( $message, stripos($message, 'nome:') + 5 );
-        $str_end = self::multineedle_stripos($str, ['endereço', 'endereco']);
+        $str = substr( $message, stripos($message, $keyword) );
+        $str = str_ireplace(["$keyword ", $keyword, "R$ ", "R$"], ['', '', '', ''], $str);
 
-        return substr($str, 0, $str_end);
-    }
-
-    /**
-     * Extracts 'endereco' from message
-     *
-     * @param String $message
-     * @return String
-     */
-    public static function get_danfe_endereco( $message )
-    {
-        $str = substr( $message, self::multineedle_stripos($message, ['endereço', 'endereco']) + 10 );
-        $str_end = stripos($str, 'valor:');
-
-        return substr($str, 0, $str_end);
-    }
-
-    /**
-     * Extracts 'valor' from message
-     *
-     * @param String $message
-     * @return String
-     */
-    public static function get_danfe_valor( $message )
-    {
-        $str = substr( $message, stripos($message, 'valor:') + 6 );
-        $str_end = stripos($str, 'vencimento:');
-
-        return substr($str, 0, $str_end);
-    }
-
-    /**
-     * Extracts 'vencimento' from message
-     *
-     * @param String $message
-     * @return String
-     */
-    public static function get_danfe_vencimento( $message )
-    {
-        $str = substr( $message, stripos($message, 'vencimento:') + 11 );
-        $str_end = -1; //stripos($str, 'vencimento:');
-
-        return substr($str, 0, $str_end);
-    }
-
-    /**
-     * Search for multiples words in the string
-     *
-     * @param String $haystack
-     * @param Array $needles
-     * @param Int $offset
-     * @return Int
-     */
-    public static function multineedle_stripos($haystack, $needles, $offset=0) {
-        foreach($needles as $needle) {
-            $tests[$needle] = stripos($haystack, $needle, $offset);
-        }
-
-        $check = false;
-        foreach( $tests as $test) {
-            if ($test) $check = $test;
-        }
-
-        return $check;
+        preg_match ('/\r\n/', $str, $matches, PREG_OFFSET_CAPTURE);
+        return substr($str, 0, $matches[0][1]);
     }
 }
