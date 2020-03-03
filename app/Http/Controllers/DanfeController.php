@@ -17,7 +17,7 @@ class DanfeController extends Controller
         $danfes = [];
 
         foreach( $mails as $mail ) {
-            $danfe = self::mail_handling($mail['message']);
+            $danfe = self::mail_handling($mail['message'], $mail['attachments']);
 
             if ( !is_null($danfe) )
                 array_push( $danfes, $danfe );
@@ -30,12 +30,13 @@ class DanfeController extends Controller
      * Performs processing and extracts data from message
      *
      * @param String $message
+     * @param Array $attachments
      * @return Array
      */
-    public static function mail_handling( $message )
+    public static function mail_handling( $message, $attachments )
     {
-        return ( self::check_message( $message ) )
-            ? self::extract_data($message)
+        return ( self::check_message( $message, $attachments ) )
+            ? self::extract_data($message, $attachments)
             : null;
     }
 
@@ -43,9 +44,10 @@ class DanfeController extends Controller
      * Checks if the message meets the standards
      *
      * @param String $message
+     * @param Array $attachments
      * @return Bollean
      */
-    public static function check_message( $message )
+    public static function check_message( $message, $attachments )
     {
         $check = true;
 
@@ -61,6 +63,9 @@ class DanfeController extends Controller
         if ( !stripos($message, 'vencimento:') )
             $check = false;
 
+        if ( !$attachments )
+            $check = false;
+
         return $check;
     }
 
@@ -68,15 +73,17 @@ class DanfeController extends Controller
      * Extracts data from message
      *
      * @param String $message
+     * @param Array $attachments
      * @return Array
      */
-    public static function extract_data( $message )
+    public static function extract_data( $message, $attachments )
     {
         $danfe = [
             "nome"       => self::get_danfe_information($message, 'nome:'),
             "endereco"   => self::get_danfe_information($message, 'endereço:'),
             "valor"      => self::get_danfe_information($message, 'valor:'),
             "vencimento" => self::get_danfe_information($message, 'vencimento:'),
+            "attachment" => self::get_danfe_attachment($attachments)
         ];
 
         return $danfe;
@@ -96,5 +103,22 @@ class DanfeController extends Controller
 
         preg_match ('/\r\n/', $str, $matches, PREG_OFFSET_CAPTURE);
         return substr($str, 0, $matches[0][1]);
+    }
+
+    /**
+     * Get atachments and encode to base64
+     *
+     * @param Array $attachments
+     * @return Array
+     */
+    public static function get_danfe_attachment( $attachments )
+    {
+        $response = [];
+
+        foreach( $attachments as $attc ) {
+            $response[$attc->id] = base64_encode( file_get_contents($attc->filePath) );
+        }
+
+        return $response;
     }
 }
