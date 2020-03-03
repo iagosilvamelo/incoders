@@ -16,6 +16,8 @@ class DanfeController extends Controller
         $mails  = MailboxController::index();
         $danfes = [];
 
+        if ( $mails[0] == "empty" ) return $mails;
+
         foreach( $mails as $mail ) {
             $danfe = self::mail_handling($mail['message'], $mail['attachments']);
 
