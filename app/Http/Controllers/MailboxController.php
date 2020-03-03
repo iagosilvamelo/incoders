@@ -32,6 +32,7 @@ class MailboxController extends Controller
 
         try {
             $mailsIds = self::mail()->searchMailbox('UNSEEN');
+            // $mailsIds = self::mail()->searchMailbox('ALL');
 
         } catch( \PhpImap\Exceptions\ConnectionException $ex ) {
             $mails[0] = "error";
@@ -75,7 +76,7 @@ class MailboxController extends Controller
             'from-email'  => $email->fromAddress,
             'to'          => $email->to,
             'subject'     => $email->subject,
-            'attachments' => ($email->hasAttachments()) ? true : false,
+            'attachments' => ($email->hasAttachments()) ? $email->getAttachments() : false,
             'message'     => $email->textPlain
         ];
     }
